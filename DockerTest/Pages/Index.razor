@@ -1,0 +1,53 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<h2>Cloud23 Elever</h2>
+
+<hr />
+
+@foreach (var student in students)
+{
+	<h4>Name: @student.Name</h4>
+	<h4>Email: @student.Email</h4>
+	<hr />
+}
+
+<h4>@failedString</h4>
+
+@code
+{
+	string apiHost = Environment.GetEnvironmentVariable("API_HOST");
+	string apiPort = Environment.GetEnvironmentVariable("API_PORT");
+	private string failedString = string.Empty;
+	private List<Student> students = new List<Student>();
+
+	protected override async Task OnInitializedAsync()
+	{
+		HttpClient http = new HttpClient();
+
+		try
+		{
+			var responseStudents = await http.GetAsync("http://localhost:8093/api/students");
+			//var responseStudents = await http.GetAsync($"http://{apiHost}:{apiPort}/api/students");
+
+
+			if (responseStudents.IsSuccessStatusCode)
+			{
+				students = await responseStudents.Content.ReadFromJsonAsync<List<Student>>();
+				failedString = $"{apiHost}:{apiPort}";
+			}
+			else
+			{
+				string errorMessage = $"Error: {responseStudents.StatusCode}";
+			}
+		}
+		catch (Exception e)
+		{
+
+			failedString = $"Error: {e}";
+			Console.WriteLine(failedString);
+		}
+
+	}
+}
